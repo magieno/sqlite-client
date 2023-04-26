@@ -31,12 +31,12 @@ import {WebSqlite} from "@magieno/web-sqlite";
 const webSqliteWorkerPath = "assets/js/web-sqlite-worker.js"; // Must correspond to the path in your final deployed build.
 const filename = "/test.sqlite3"; // This is the name of your database. It corresponds to the path in the OPFS.
 
-const sqliteClient = new WebSqlite(filename, webSqliteWorkerPath)
-await sqliteClient.init();
+const webSqlite = new WebSqlite(filename, webSqliteWorkerPath)
+await webSqlite.init();
 
-await sqliteClient.executeSql("CREATE TABLE IF NOT EXISTS test(a,b)");
-await sqliteClient.executeSql("INSERT INTO test VALUES(?, ?)", [6,7]);
-const results = await sqliteClient.executeSql("SELECT * FROM test");
+await webSqlite.executeSql("CREATE TABLE IF NOT EXISTS test(a,b)");
+await webSqlite.executeSql("INSERT INTO test VALUES(?, ?)", [6,7]);
+const results = await webSqlite.executeSql("SELECT * FROM test");
 ```
 
 3- Copy the `node_modules/@magieno/web-sqlite/dist/bundle/web-sqlite-worker.js` to your final bundle
