@@ -4,16 +4,10 @@ Web SQLite is a wrapper for SQLite Wasm that uses the Origin Private File System
 
 It only supports OPFS as a persistence mechanism.
 
-## Installation
-
-```
-npm install @magieno/web-sqlite
-```
-
-## Bundling using NPM
+## Installation using NPM
 
 This library has two important files: `web-sqlite.js` and `web-sqlite-worker.js`. 
-Due to some browser restrictions, SQLite WASM can only persist over OPFS in a Worker. 
+Due to some browser restrictions, SQLite WASM can only persist over OPFS when executed in a Worker. 
 Behind the scenes, WebSqlite communicates with a worker to run the SQL statements and return you the results
 on the main thread.  
 
@@ -42,7 +36,7 @@ const results = await webSqlite.executeSql("SELECT * FROM test");
 3- Copy the `node_modules/@magieno/web-sqlite/dist/bundle/web-sqlite-worker.js` to your final bundle
 This is dependent on the framework you are using but the idea is that this .js file should be copied and available in your build.
 
-4- You also need to copy the files `third_party/sqlite/3.41.2/` file to your final bundle, in the same folder of your final bundle next to `web-sqlite-worker.js`.
+4- Copy the files `third_party/sqlite/3.41.2/` file to your final bundle, in the same folder of your final bundle next to `web-sqlite-worker.js`.
 
 5- **Warning** Your server must set the following Http headers when serving your files
 
