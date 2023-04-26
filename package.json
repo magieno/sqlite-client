@@ -1,0 +1,54 @@
+{
+  "name": "@magieno/web-sqlite",
+  "version": "0.0.1",
+  "description": "Web SQLite is a wrapper for Sqlite on Wasm that uses the Origin Private File System to persist the sqlite database file.",
+  "keywords": [
+    "sqlite",
+    "sqlite3",
+    "sqlite-wasm",
+    "sqlite3-wasm",
+    "webassembly",
+    "wasm",
+    "esm",
+    "opfs",
+    "origin-private-file-system",
+    "bucket-file-system",
+    "bfs"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "module": "dist/bundle/web-sqlite.js",
+  "types": "dist/esm/web-sqlite.d.ts",
+  "main": "dist/bundle/web-sqlite.js",
+  "type": "module",
+  "scripts": {
+    "prebuild": "rm -rf dist",
+    "build": "tsc -p tsconfig.json",
+    "bundle": "mkdir -p dist/third_party && cp -r third_party/* dist/third_party/ && rollup -c rollup.config.js --compact",
+    "package": "tsc -p tsconfig.json && mkdir -p dist/third_party && cp -r third_party/* dist/third_party/ && rollup -c rollup.config.js --compact"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/magieno/web-sqlite.git"
+  },
+  "author": "Etienne Noël (etiennenoel@google.com)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/magieno/web-sqlite/issues"
+  },
+  "homepage": "https://github.com/magieno/web-sqlite#readme",
+  "devDependencies": {
+    "typescript": "^5.0.4",
+    "@rollup/plugin-commonjs": "^24.0.1",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.1",
+    "rollup": "^3.16.0",
+    "rollup-plugin-cleanup": "^3.2.1",
+    "rollup-plugin-ignore": "^1.0.10",
+    "rollup-plugin-typescript2": "^0.34.1"
+  },
+  "files": [
+    "dist"
+  ]
+}
