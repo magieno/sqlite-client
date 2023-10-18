@@ -1,7 +1,7 @@
 {
-  "name": "@magieno/web-sqlite",
-  "version": "0.0.1",
-  "description": "Web SQLite is a wrapper for Sqlite on Wasm that uses the Origin Private File System to persist the sqlite database file.",
+  "name": "@magieno/sqlite-client",
+  "version": "3.43.2",
+  "description": "SQLite Client is a wrapper for Sqlite on Wasm that uses the Origin Private File System to persist the sqlite database file.",
   "keywords": [
     "sqlite",
     "sqlite3",
@@ -18,26 +18,29 @@
   "publishConfig": {
     "access": "public"
   },
-  "module": "dist/bundle/web-sqlite.js",
-  "types": "dist/esm/web-sqlite.d.ts",
-  "main": "dist/bundle/web-sqlite.js",
+  "module": "dist/bundle/sqlite-client.js",
+  "types": "dist/esm/sqlite-client.d.ts",
+  "main": "dist/bundle/sqlite-client.js",
   "type": "module",
   "scripts": {
     "prebuild": "rm -rf dist",
     "build": "tsc -p tsconfig.json",
-    "bundle": "mkdir -p dist/third_party && cp -r third_party/* dist/third_party/ && rollup -c rollup.config.js --compact",
-    "package": "tsc -p tsconfig.json && mkdir -p dist/third_party && cp -r third_party/* dist/third_party/ && rollup -c rollup.config.js --compact"
+    "bundle": "rollup -c rollup.config.js --compact",
+    "package": "tsc -p tsconfig.json && rollup -c rollup.config.js --compact"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/magieno/web-sqlite.git"
+    "url": "git+https://github.com/magieno/sqlite-client.git"
   },
   "author": "Etienne Noël (etiennenoel@google.com)",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/magieno/web-sqlite/issues"
+    "url": "https://github.com/magieno/sqlite-client/issues"
   },
-  "homepage": "https://github.com/magieno/web-sqlite#readme",
+  "homepage": "https://github.com/magieno/sqlite-client#readme",
+  "dependencies": {
+    "@sqlite.org/sqlite-wasm": "^3.43.2-build1"
+  },
   "devDependencies": {
     "typescript": "^5.0.4",
     "@rollup/plugin-commonjs": "^24.0.1",

@@ -1,42 +1,42 @@
-# Web SQLite
+# SQLite Client
 
-Web SQLite is a wrapper for SQLite Wasm that uses the Origin Private File System (OPFS) to persist the SQLite database file.
+SQLite Client is a wrapper for [SQLite](https://github.com/sqlite/sqlite-wasm) that uses the Origin Private File System (OPFS) to persist the SQLite database file.
 
 It only supports OPFS as a persistence mechanism.
 
 ## Installation using NPM
 
-This library has two important files: `web-sqlite.js` and `web-sqlite-worker.js`. 
+This library has two important files: `sqlite-client.js` and `sqlite-client-worker.js`. 
 Due to some browser restrictions, SQLite WASM can only persist over OPFS when executed in a Worker. 
-Behind the scenes, WebSqlite communicates with a worker to run the SQL statements and return you the results
+Behind the scenes, Sqlite communicates with a worker to run the SQL statements and return you the results
 on the main thread.  
 
 1- Install the NPM package
 
 ```
-npm install @magieno/web-sqlite
+npm install @magieno/sqlite-client
 ```
 
-2- Import the `web-sqlite` library in your code and use it as such:
+2- Import the `sqlite-client` library in your code and use it as such:
 
 ```
-import {WebSqlite} from "@magieno/web-sqlite";
+import {SqliteClient} from "@magieno/sqlite-client";
 
-const webSqliteWorkerPath = "assets/js/web-sqlite-worker.js"; // Must correspond to the path in your final deployed build.
+const sqliteClientWorkerPath = "assets/js/sqlite-client-worker.js"; // Must correspond to the path in your final deployed build.
 const filename = "/test.sqlite3"; // This is the name of your database. It corresponds to the path in the OPFS.
 
-const webSqlite = new WebSqlite(filename, webSqliteWorkerPath)
-await webSqlite.init();
+const sqliteClient = new SqliteClient(filename, sqliteClientWorkerPath)
+await sqliteClient.init();
 
-await webSqlite.executeSql("CREATE TABLE IF NOT EXISTS test(a,b)");
-await webSqlite.executeSql("INSERT INTO test VALUES(?, ?)", [6,7]);
-const results = await webSqlite.executeSql("SELECT * FROM test");
+await sqliteClient.executeSql("CREATE TABLE IF NOT EXISTS test(a,b)");
+await sqliteClient.executeSql("INSERT INTO test VALUES(?, ?)", [6,7]);
+const results = await sqliteClient.executeSql("SELECT * FROM test");
 ```
 
-3- Copy the `node_modules/@magieno/web-sqlite/dist/bundle/web-sqlite-worker.js` to your final bundle
+3- Copy the `node_modules/@magieno/sqlite-client/dist/bundle/sqlite-client-worker.js` to your final bundle
 This is dependent on the framework you are using but the idea is that this .js file should be copied and available in your build.
 
-4- Copy the files `third_party/sqlite/3.41.2/` file to your final bundle, in the same folder of your final bundle next to `web-sqlite-worker.js`.
+4- Copy the files `node_modules/@sqlite.org/sqlite-wasm/sqlite-wasm/jswasm/*` file to your final bundle next to `sqlite-client-worker.js`.
 
 5- **Warning** Your server must set the following Http headers when serving your files
 
@@ -47,4 +47,4 @@ This is dependent on the framework you are using but the idea is that this .js f
 ### Demos
 We have created a repository that contains demos that you can look at: 
 
-https://github.com/magieno/web-sqlite-demo
+https://github.com/magieno/sqlite-client-demo

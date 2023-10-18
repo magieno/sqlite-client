@@ -2,7 +2,7 @@ import {SqliteMessageTypeEnum} from "./enums/sqlite-message-type.enum";
 import {CreateDatabaseMessage} from "./messages/create-database.message";
 import {SqliteMessageInterface} from "./interfaces/sqlite-message.interface";
 import {CreateDatabaseResultMessage} from "./messages/create-database-result.message";
-import {default as sqlite3InitModule} from "../third_party/sqlite/3.41.2/sqlite3.mjs";
+import {default as sqlite3InitModule} from "@sqlite.org/sqlite-wasm";
 import {ExecuteSqlMessage} from "./messages/execute-sql.message";
 import {ExecuteSqlResultMessage} from "./messages/execute-sql-result.message";
 
@@ -19,11 +19,14 @@ self.onmessage = (messageEvent: MessageEvent) => {
         print: log,
         printErr: error,
       }).then((sqlite3) => {
+        const createDatabaseMessage = sqliteMessage as CreateDatabaseMessage;
+        const uniqueId = createDatabaseMessage.uniqueId;
         try {
-          db = new sqlite3.oo1.OpfsDb((sqliteMessage as CreateDatabaseMessage).filename);
-          self.postMessage(new CreateDatabaseResultMessage((sqliteMessage as CreateDatabaseMessage).uniqueId));
+          db = new sqlite3.oo1.OpfsDb(createDatabaseMessage.filename, createDatabaseMessage.flags);
+          self.postMessage(new CreateDatabaseResultMessage(uniqueId));
         } catch (err) {
           error(err.name, err.message);
+          self.postMessage(new CreateDatabaseResultMessage(uniqueId, err));
         }
       });
     break;
@@ -32,13 +35,19 @@ self.onmessage = (messageEvent: MessageEvent) => {
       // Check if the database exists and if yes,
       const executeSqlMessage = sqliteMessage as ExecuteSqlMessage;
 
-      const result = db.exec({
-        sql: executeSqlMessage.sqlStatement,
-        bind: executeSqlMessage.bindingParameters,
-        returnValue: "resultRows",
-        rowMode: 'array',
-      });
-      self.postMessage(new ExecuteSqlResultMessage(executeSqlMessage.uniqueId, result));
+      try {
+        const result = db.exec({
+          sql: executeSqlMessage.sqlStatement,
+          bind: executeSqlMessage.bindingParameters,
+          returnValue: "resultRows",
+          rowMode: 'array',
+
+        });
+        self.postMessage(new ExecuteSqlResultMessage(executeSqlMessage.uniqueId, result));
+      } catch (e) {
+        self.postMessage(new ExecuteSqlResultMessage(executeSqlMessage.uniqueId, [], e));
+      }
+
       break;
   }
 }

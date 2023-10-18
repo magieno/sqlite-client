@@ -3,13 +3,14 @@ import {CreateDatabaseMessage} from "./messages/create-database.message";
 import {SqliteMessageInterface} from "./interfaces/sqlite-message.interface";
 import {SqliteMessageTypeEnum} from "./enums/sqlite-message-type.enum";
 import {ExecuteSqlResultMessage} from "./messages/execute-sql-result.message";
+import {CreateDatabaseResultMessage} from "./messages/create-database-result.message";
 
-export class WebSqlite {
+export class SqliteClient {
   private queuedPromises: {[hash in string]: {resolve: (...args) => void, reject: (...args) => void}} = {}
 
   private worker: Worker;
 
-  constructor(private readonly filename: string, private sqliteWorkerPath: string) {
+  constructor(private readonly filename: string, private readonly flags: string, private sqliteWorkerPath: string) {
   }
 
   public init() {
@@ -18,7 +19,7 @@ export class WebSqlite {
     })
     this.worker.onmessage = this.messageReceived.bind(this);
 
-    const createDatabaseMessage = new CreateDatabaseMessage(this.filename);
+    const createDatabaseMessage = new CreateDatabaseMessage(this.filename, this.flags);
     this.worker.postMessage(createDatabaseMessage);
 
     return new Promise<any>( (resolve, reject) => {
@@ -37,8 +38,20 @@ export class WebSqlite {
 
       switch (sqliteMessage.type) {
         case SqliteMessageTypeEnum.ExecuteSqlResult:
-          return promise.resolve( (sqliteMessage as ExecuteSqlResultMessage).result);
+          const executeSqlResultMessage = sqliteMessage as ExecuteSqlResultMessage;
+
+          if(executeSqlResultMessage.error) {
+            return promise.reject(executeSqlResultMessage.error);
+          }
+
+          return promise.resolve(executeSqlResultMessage.result);
         case SqliteMessageTypeEnum.CreateDatabaseResult:
+          const createDatabaseResultMessage = sqliteMessage as CreateDatabaseResultMessage;
+
+          if(createDatabaseResultMessage.error) {
+            return promise.reject(createDatabaseResultMessage.error);
+          }
+
           return promise.resolve();
       }
     }
