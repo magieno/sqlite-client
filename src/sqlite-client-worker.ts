@@ -2,12 +2,13 @@ import { SqliteClientType, SqliteMessageTypeEnum } from "./enums/sqlite-message-
 import { CreateDatabaseOpfsMessage } from "./messages/create-database.opfs.message";
 import { SqliteMessageInterface } from "./interfaces/sqlite-message.interface";
 import { CreateDatabaseResultMessage } from "./messages/create-database-result.message";
-import { default as sqlite3InitModule } from "@sqlite.org/sqlite-wasm";
+import { Database, OpfsDatabase, OpfsSAHPoolDatabase, SAHPoolUtil, default as sqlite3InitModule } from "@sqlite.org/sqlite-wasm";
 import { ExecuteSqlMessage } from "./messages/execute-sql.message";
 import { ExecuteSqlResultMessage } from "./messages/execute-sql-result.message";
+import { CreateDatabaseOpfsSahMessage } from "./messages/create-database.opfsSah.message";
 
-let db;
-let poolUtil;
+let db: OpfsDatabase | OpfsSAHPoolDatabase | Database;
+let poolUtil: SAHPoolUtil;
 const log = (...args) => console.log(...args);
 const error = (...args) => console.error(...args);
 
@@ -20,7 +21,7 @@ self.onmessage = (messageEvent: MessageEvent) => {
         print: log,
         printErr: error,
       }).then(async (sqlite3) => {
-        
+
         const createDatabaseMessage = sqliteMessage as CreateDatabaseOpfsMessage;
         const uniqueId = createDatabaseMessage.uniqueId;
         try {
@@ -29,13 +30,14 @@ self.onmessage = (messageEvent: MessageEvent) => {
               db = new sqlite3.oo1.OpfsDb(createDatabaseMessage.filename, createDatabaseMessage.flags);
               break;
             case SqliteClientType.OpfsSah:
-              poolUtil = await sqlite3.installOpfsSAHPoolVfs({
-              });
+              poolUtil = await sqlite3.installOpfsSAHPoolVfs(createDatabaseMessage as CreateDatabaseOpfsSahMessage);
               db = new poolUtil.OpfsSAHPoolDb(createDatabaseMessage.filename);
               break;
-            default:
+            case SqliteClientType.Memory:
               db = new sqlite3.oo1.DB(createDatabaseMessage.filename, createDatabaseMessage.flags);
               break;
+            default:
+            throw new Error(`Unsupported SQLite Client Type: ${createDatabaseMessage.clientType}`)
           }
           self.postMessage(new CreateDatabaseResultMessage(uniqueId));
         } catch (err) {
@@ -53,9 +55,8 @@ self.onmessage = (messageEvent: MessageEvent) => {
         const result = db.exec({
           sql: executeSqlMessage.sqlStatement,
           bind: executeSqlMessage.bindingParameters,
-          returnValue: executeSqlMessage.returnValue,
+          returnValue: executeSqlMessage.returnValue as any, // to do i am no typescript ninja :-(
           rowMode: executeSqlMessage.rowMode,
-
         });
         self.postMessage(new ExecuteSqlResultMessage(executeSqlMessage.uniqueId, result));
       } catch (e) {

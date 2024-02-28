@@ -5,7 +5,7 @@ export class ExecuteSqlResultMessage implements SqliteMessageInterface {
   type: SqliteMessageTypeEnum = SqliteMessageTypeEnum.ExecuteSqlResult;
 
   constructor(public readonly uniqueId: string,
-              public readonly result: string[],
+              public readonly result: any,
               public readonly error?: any) {
   }
 
