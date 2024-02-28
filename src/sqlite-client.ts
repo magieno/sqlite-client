@@ -30,9 +30,9 @@ export abstract class SqliteClientBase {
 
   public abstract init(): any;
   public abstract executeSql(sqlStatement: string,
-    bindParameters: (string | number)[],
-    returnValue: ExecuteSqlReturnValue,
-    rowMode: ExecuteSqlRowMode): Promise<any>;
+    bindParameters?: (string | number)[],
+    returnValue?: ExecuteSqlReturnValue,
+    rowMode?: ExecuteSqlRowMode): Promise<any>;
 }
 
 
