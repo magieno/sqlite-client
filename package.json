@@ -18,9 +18,9 @@
   "publishConfig": {
     "access": "public"
   },
-  "module": "dist/bundle/sqlite-client.js",
-  "types": "dist/esm/sqlite-client.d.ts",
-  "main": "dist/bundle/sqlite-client.js",
+  "module": "dist/bundle/index.js",
+  "types": "dist/esm/index.d.ts",
+  "main": "dist/bundle/index.js",
   "type": "module",
   "scripts": {
     "prebuild": "rm -rf dist",

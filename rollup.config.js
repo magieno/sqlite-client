@@ -4,7 +4,7 @@ import nodeResolve from "@rollup/plugin-node-resolve";
 
 export default [
   {
-    input: 'dist/esm/sqlite-client.js',
+    input: 'dist/esm/index.js',
     output: {
       dir: 'dist/bundle',
       format: 'esm',

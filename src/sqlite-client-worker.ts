@@ -1,4 +1,5 @@
-import { SqliteClientType, SqliteMessageTypeEnum } from "./enums/sqlite-message-type.enum";
+import { SqliteClientType } from "./enums/sqlite-client-type.enum";
+import { SqliteMessageTypeEnum } from "./enums/sqlite-message-type.enum";
 import { CreateDatabaseOpfsMessage } from "./messages/create-database.opfs.message";
 import { SqliteMessageInterface } from "./interfaces/sqlite-message.interface";
 import { CreateDatabaseResultMessage } from "./messages/create-database-result.message";
@@ -33,11 +34,11 @@ self.onmessage = (messageEvent: MessageEvent) => {
               poolUtil = await sqlite3.installOpfsSAHPoolVfs(createDatabaseMessage as CreateDatabaseOpfsSahMessage);
               db = new poolUtil.OpfsSAHPoolDb(createDatabaseMessage.filename);
               break;
-            case SqliteClientType.Memory:
+            case SqliteClientType.MemoryWorker:
               db = new sqlite3.oo1.DB(createDatabaseMessage.filename, createDatabaseMessage.flags);
               break;
             default:
-            throw new Error(`Unsupported SQLite Client Type: ${createDatabaseMessage.clientType}`)
+              throw new Error(`Unsupported SQLite Client Type: ${createDatabaseMessage.clientType}`)
           }
           self.postMessage(new CreateDatabaseResultMessage(uniqueId));
         } catch (err) {
@@ -55,7 +56,7 @@ self.onmessage = (messageEvent: MessageEvent) => {
         const result = db.exec({
           sql: executeSqlMessage.sqlStatement,
           bind: executeSqlMessage.bindingParameters,
-          returnValue: executeSqlMessage.returnValue as any, // to do i am no typescript ninja :-(
+          returnValue: executeSqlMessage.returnValue as any, // todo i am no typescript ninja :-(
           rowMode: executeSqlMessage.rowMode,
         });
         self.postMessage(new ExecuteSqlResultMessage(executeSqlMessage.uniqueId, result));
