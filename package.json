@@ -39,7 +39,7 @@
   },
   "homepage": "https://github.com/magieno/sqlite-client#readme",
   "dependencies": {
-    "@sqlite.org/sqlite-wasm": "^3.43.2-build1"
+    "@sqlite.org/sqlite-wasm": "^3.45.1-build1"
   },
   "devDependencies": {
     "typescript": "^5.0.4",
