@@ -2,16 +2,16 @@ import { Database, Sqlite3Static, default as sqlite3InitModule } from "@sqlite.o
 import {SqliteAdapterInterface} from "../interfaces/sqlite-adapter.interface";
 import {ReturnValueEnum} from "../enums/return-value.enum";
 import {RowModeEnum} from "../enums/row-mode.enum";
-import {InMemorySqliteAdapterOptionsInterface} from "../interfaces/in-memory-sqlite-adapter-options.interface";
+import {MemoryMainThreadSqliteOptionsInterface} from "../interfaces/memory-main-thread-sqlite-options.interface";
 
-export class InMemorySqliteAdapter implements SqliteAdapterInterface {
+export class InMainThreadSqliteAdapter implements SqliteAdapterInterface {
     protected filename: string;
     protected flags: string;
 
     protected sqlite3: Sqlite3Static | void;
     protected db: Database;
 
-    constructor(private readonly options: InMemorySqliteAdapterOptionsInterface) {
+    constructor(private readonly options: MemoryMainThreadSqliteOptionsInterface) {
     }
 
     public getDB(): Database | undefined {

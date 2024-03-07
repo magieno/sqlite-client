@@ -1,7 +1,7 @@
 import {SqliteClientTypeEnum} from "../enums/sqlite-client-type.enum";
 
-export interface InMemorySqliteAdapterOptionsInterface {
-    type: SqliteClientTypeEnum.Memory;
+export interface MemoryMainThreadSqliteOptionsInterface {
+    type: SqliteClientTypeEnum.MemoryMainThread;
 
     filename: string;
 

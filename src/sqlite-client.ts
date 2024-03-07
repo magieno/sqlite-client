@@ -1,20 +1,26 @@
 import {SqliteClientOptions} from "./types/sqlite-client.options";
 import {SqliteAdapterInterface} from "./interfaces/sqlite-adapter.interface";
 import {SqliteClientTypeEnum} from "./enums/sqlite-client-type.enum";
-import {InMemorySqliteAdapter} from "./adapters/in-memory.sqlite-adapter";
+import {InMainThreadSqliteAdapter} from "./adapters/in-main-thread.sqlite-adapter";
 import {ReturnValueEnum} from "./enums/return-value.enum";
 import {RowModeEnum} from "./enums/row-mode.enum";
+import {InWorkerSqliteAdapter} from "./adapters/in-worker.sqlite-adapter";
 
 export class SqliteClient {
     public readonly adapter: SqliteAdapterInterface;
 
     constructor(private readonly options: SqliteClientOptions) {
         switch (this.options.type) {
-            case SqliteClientTypeEnum.Memory:
-                this.adapter = new InMemorySqliteAdapter(this.options);
+            case SqliteClientTypeEnum.MemoryMainThread:
+                this.adapter = new InMainThreadSqliteAdapter(this.options);
+                break;
+            case SqliteClientTypeEnum.MemoryWorker:
+            case SqliteClientTypeEnum.OpfsWorker:
+            case SqliteClientTypeEnum.OpfsSahWorker:
+                this.adapter = new InWorkerSqliteAdapter(this.options);
                 break;
             default:
-                throw new Error(`Unknown sqlite client type: ${this.options.type}`);
+                throw new Error(`Unknown sqlite client type for options: '${this.options}.`);
         }
     }
 
