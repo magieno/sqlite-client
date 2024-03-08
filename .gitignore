@@ -41,3 +41,5 @@ Thumbs.db
 
 */node_modules/*
 */dist/
+
+e2e/*/assets/*

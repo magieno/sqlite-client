@@ -28,7 +28,7 @@ export class SqliteClient {
         return this.adapter.init();
     }
 
-    public async executeSql(sqlStatement: string, bindParameters: (string | number)[], returnValue: ReturnValueEnum, rowMode: RowModeEnum | number): Promise<any> {
+    public async executeSql(sqlStatement: string, bindParameters: (string | number)[] = [], returnValue: ReturnValueEnum = ReturnValueEnum.ResultRows, rowMode: RowModeEnum | number = RowModeEnum.Array): Promise<any> {
         if(this.adapter === undefined) {
             throw new Error("You need to call `init` before calling `executeSql`.");
         }
