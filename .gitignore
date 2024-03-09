@@ -43,3 +43,4 @@ Thumbs.db
 **/*/dist/
 
 e2e/*/assets/*
+e2e/coverage
