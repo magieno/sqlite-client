@@ -1,12 +1,12 @@
 import {SqliteClient} from "../../src/sqlite-client";
 import {SqliteClientTypeEnum} from "../../src/enums/sqlite-client-type.enum";
-
 const filename = "/test.sqlite3";
 
 const sqliteClient = new SqliteClient({
-    type: SqliteClientTypeEnum.MemoryMainThread,
+    type: SqliteClientTypeEnum.MemoryWorker,
     filename,
     flags: "c",
+    sqliteWorkerPath: "dist/sqlite-client-worker.mjs"
 })
 
 const bootstrap = async () => {

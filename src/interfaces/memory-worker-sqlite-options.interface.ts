@@ -6,4 +6,6 @@ export interface MemoryWorkerSqliteOptionsInterface {
     filename: string;
 
     flags: string;
+
+    sqliteWorkerPath: string;
 }

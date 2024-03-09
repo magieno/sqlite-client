@@ -21,6 +21,8 @@ export class SqliteClientWorkerProxy {
     }
 
     public init(): Promise<void> {
+        const createDatabaseMessage = new CreateDatabaseMessage(this.options);
+
         const promise = new Promise<any>((resolve, reject) => {
             this.queuedPromises[createDatabaseMessage.uniqueId] = {
                 resolve,
@@ -37,8 +39,6 @@ export class SqliteClientWorkerProxy {
         })
 
         this.worker.onmessage = this.messageReceived.bind(this);
-
-        const createDatabaseMessage = new CreateDatabaseMessage(this.options);
 
         this.worker.postMessage(createDatabaseMessage);
 
@@ -73,14 +73,14 @@ export class SqliteClientWorkerProxy {
     }
 
     public executeSql(sqlStatement: string, bindParameters: (string | number)[], returnValue: ReturnValueEnum, rowMode: RowModeEnum | number): Promise<any> {
+        const executeSqlMessage = new ExecuteSqlMessage(sqlStatement, bindParameters, returnValue, rowMode);
+
         const promise = new Promise<any>((resolve, reject) => {
             this.queuedPromises[executeSqlMessage.uniqueId] = {
                 resolve,
                 reject,
             };
         });
-
-        const executeSqlMessage = new ExecuteSqlMessage(sqlStatement, bindParameters, returnValue, rowMode);
 
         this.worker.postMessage(executeSqlMessage);
 
