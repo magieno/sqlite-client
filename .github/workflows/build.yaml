@@ -31,6 +31,9 @@ jobs:
       - run: npm run package
 
       # Run the tests
-      - run: cd e2e
+      - run: npm ci
+        working-directory: e2e
       - run: npm run build
+        working-directory: e2e
       - run: npm run test
+        working-directory: e2e
