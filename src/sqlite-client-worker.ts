@@ -2,53 +2,126 @@ import {SqliteMessageTypeEnum} from "./enums/sqlite-message-type.enum";
 import {CreateDatabaseMessage} from "./messages/create-database.message";
 import {SqliteMessageInterface} from "./interfaces/sqlite-message.interface";
 import {CreateDatabaseResultMessage} from "./messages/create-database-result.message";
-import {default as sqlite3InitModule} from "@sqlite.org/sqlite-wasm";
+import {Database, default as sqlite3InitModule} from "@sqlite.org/sqlite-wasm";
 import {ExecuteSqlMessage} from "./messages/execute-sql.message";
 import {ExecuteSqlResultMessage} from "./messages/execute-sql-result.message";
+import {SqliteClientTypeEnum} from "./enums/sqlite-client-type.enum";
+import {OpfsWorkerSqliteOptionsInterface} from "./interfaces/opfs-worker-sqlite-options.interface";
+import {MemoryWorkerSqliteOptionsInterface} from "./interfaces/memory-worker-sqlite-options.interface";
+import {OpfsSahWorkerSqliteOptionsInterface} from "./interfaces/opfs-sah-worker-sqlite-options.interface";
 
-let db;
 const log = (...args) => console.log(...args);
 const error = (...args) => console.error(...args);
 
-self.onmessage = (messageEvent: MessageEvent) => {
-  const sqliteMessage = messageEvent.data as SqliteMessageInterface;
+class SqliteClientWorker {
+    protected db: Database;
 
-  switch (sqliteMessage.type) {
-    case SqliteMessageTypeEnum.CreateDatabase:
-      sqlite3InitModule({
-        print: log,
-        printErr: error,
-      }).then((sqlite3) => {
-        const createDatabaseMessage = sqliteMessage as CreateDatabaseMessage;
+    constructor() {
+    }
+
+    public async onMessageReceivedFromMainThread(messageEvent: MessageEvent) {
+        const sqliteMessage = messageEvent.data as SqliteMessageInterface;
+
+        switch (sqliteMessage.type) {
+            case SqliteMessageTypeEnum.CreateDatabase:
+                await this.createDatabase(sqliteMessage as CreateDatabaseMessage);
+                break;
+            case SqliteMessageTypeEnum.ExecuteSql:
+                this.executeSql(sqliteMessage as ExecuteSqlMessage);
+                break;
+        }
+    }
+
+    public postBackMessageToMainThread(message: any) {
+        self.postMessage(message);
+    }
+
+    private async createDatabase(createDatabaseMessage: CreateDatabaseMessage) {
         const uniqueId = createDatabaseMessage.uniqueId;
         try {
-          db = new sqlite3.oo1.OpfsDb(createDatabaseMessage.filename, createDatabaseMessage.flags);
-          self.postMessage(new CreateDatabaseResultMessage(uniqueId));
+            const sqlite3 = await sqlite3InitModule({
+                print: log,
+                printErr: error,
+            });
+
+            switch (createDatabaseMessage.options.type) {
+                case SqliteClientTypeEnum.MemoryMainThread:
+                    this.postBackMessageToMainThread(new CreateDatabaseResultMessage(createDatabaseMessage.uniqueId, new Error(`The Sqlite-Client-Worker does not support the [${SqliteClientTypeEnum.MemoryMainThread}] types. This type can be used directly in the main thread.`)));
+                    break;
+                case SqliteClientTypeEnum.MemoryWorker:
+
+                    try {
+                        const options = createDatabaseMessage.options as MemoryWorkerSqliteOptionsInterface;
+
+                        this.db = new sqlite3.oo1.DB(options.filename, options.flags);
+                        this.postBackMessageToMainThread(new CreateDatabaseResultMessage(uniqueId));
+
+                    } catch (err) {
+                        error(err.name, err.message);
+                        this.postBackMessageToMainThread(new CreateDatabaseResultMessage(uniqueId, err));
+                    }
+                    break;
+                case SqliteClientTypeEnum.OpfsWorker:
+                    try {
+                        const options = createDatabaseMessage.options as OpfsWorkerSqliteOptionsInterface;
+
+                        this.db = new sqlite3.oo1.OpfsDb(options.filename, options.flags);
+                        this.postBackMessageToMainThread(new CreateDatabaseResultMessage(uniqueId));
+
+                    } catch (err) {
+                        error(err.name, err.message);
+                        this.postBackMessageToMainThread(new CreateDatabaseResultMessage(uniqueId, err));
+                    }
+                    break;
+                case SqliteClientTypeEnum.OpfsSahWorker:
+                    try {
+                        const options = createDatabaseMessage.options as OpfsSahWorkerSqliteOptionsInterface;
+
+                        const poolUtil = await sqlite3.installOpfsSAHPoolVfs({
+                            name: createDatabaseMessage.options.name,
+                            directory: createDatabaseMessage.options.directory,
+                            clearOnInit: createDatabaseMessage.options.clearOnInit,
+                        });
+                        this.db = new poolUtil.OpfsSAHPoolDb(createDatabaseMessage.options.filename);
+
+                        this.postBackMessageToMainThread(new CreateDatabaseResultMessage(uniqueId));
+
+                    } catch (err) {
+                        error(err.name, err.message);
+                        this.postBackMessageToMainThread(new CreateDatabaseResultMessage(uniqueId, err));
+                    }
+                    break;
+            }
         } catch (err) {
-          error(err.name, err.message);
-          self.postMessage(new CreateDatabaseResultMessage(uniqueId, err));
+            error(err.name, err.message);
+            this.postBackMessageToMainThread(new CreateDatabaseResultMessage(uniqueId, err));
         }
-      });
-    break;
-    case SqliteMessageTypeEnum.ExecuteSql:
-      // Execute the sql command.
-      // Check if the database exists and if yes,
-      const executeSqlMessage = sqliteMessage as ExecuteSqlMessage;
+    }
 
-      try {
-        const result = db.exec({
-          sql: executeSqlMessage.sqlStatement,
-          bind: executeSqlMessage.bindingParameters,
-          returnValue: "resultRows",
-          rowMode: 'array',
+    private executeSql(executeSqlMessage: ExecuteSqlMessage) {
+        if (!this.db) {
+            this.postBackMessageToMainThread(new ExecuteSqlResultMessage(executeSqlMessage.uniqueId, [], new Error("The database has not been created yet. Send a CreateDatabaseMessage first.")));
+            return;
+        }
 
-        });
-        self.postMessage(new ExecuteSqlResultMessage(executeSqlMessage.uniqueId, result));
-      } catch (e) {
-        self.postMessage(new ExecuteSqlResultMessage(executeSqlMessage.uniqueId, [], e));
-      }
+        try {
+            const result = this.db.exec({
+                sql: executeSqlMessage.sqlStatement,
+                bind: executeSqlMessage.bindingParameters,
+                returnValue: executeSqlMessage.returnValue as any, // todo: investigate why Typescript expect that this be set to 'saveSql'.
+                rowMode: executeSqlMessage.rowMode,
 
-      break;
-  }
+            });
+            this.postBackMessageToMainThread(new ExecuteSqlResultMessage(executeSqlMessage.uniqueId, result as any)); // todo: investigate why Typescript thinks it's going to be the wrong type.
+        } catch (e) {
+            this.postBackMessageToMainThread(new ExecuteSqlResultMessage(executeSqlMessage.uniqueId, [], e));
+        }
+    }
 }
 
+// Instantiate the worker here.
+const sqliteClientWorker = new SqliteClientWorker();
+
+self.onmessage = async (messageEvent: MessageEvent) => {
+    await sqliteClientWorker.onMessageReceivedFromMainThread(messageEvent);
+}
